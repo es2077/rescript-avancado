@@ -5,8 +5,9 @@ module type Config = {
   let decode: string => t
 }
 
-module Make = (Config: Config) => {
-  let useRehydrate = keyName => {
+let useRehydrate:
+  type state. (module(Config with type t = state), string) => (option<state>, state => unit) =
+  (module(Config), keyName) => {
     let (state, setState) = React.useState(_ => None)
 
     React.useEffect0(() => {
@@ -26,12 +27,10 @@ module Make = (Config: Config) => {
     (state, update)
   }
 
-  module Render = {
-    @react.component
-    let make = (~value) => {
-      value
-      ->Belt.Option.mapWithDefault(Config.makeDefault()->Config.encode, Config.encode)
-      ->React.string
-    }
+let render:
+  type state. (module(Config with type t = state), option<state>) => React.element =
+  (module(Config), value) => {
+    value
+    ->Belt.Option.mapWithDefault(Config.makeDefault()->Config.encode, Config.encode)
+    ->React.string
   }
-}
